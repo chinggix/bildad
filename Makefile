@@ -1,7 +1,7 @@
 CFLAGS  = -ansi -Wall -g -Werror -pedantic -Os
 LDFLAGS = -lm -lGL -lX11
 
-SRC := main.c
+SRC := bildad.c draw.c xws.c
 OBJ := $(SRC:.c=.o)
 
 bildad: $(OBJ)
