@@ -1,6 +1,7 @@
 #include <GL/gl.h>
 
 #include "draw.h"
+#include "draw.h"
 
 static struct {
   double x;
@@ -9,8 +10,16 @@ static struct {
   unsigned int h;
 } video = {0.0f, 0.0f, 680.0f, 480.0f};
 
+static void cls(void);
+
 void
-clear_screen()
+redraw()
+{
+  cls();
+}
+
+void
+cls()
 {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

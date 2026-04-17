@@ -22,6 +22,14 @@ static void 	 xfatal(const char*, ...);
 static Window	 dumpwin(void);
 
 void
+run_x(void (*draw)(void))
+{
+  for (;;) {
+    (*draw)();
+  }
+}
+
+void
 setup_xevent(void (*reshape)(unsigned int, unsigned int))
 {
   while (XNextEvent(window.dpy, &event)) {
