@@ -12,10 +12,10 @@ struct ball {
   struct vec3 rot;
 };
 
-extern double sight;
 extern struct ball cue_ball;
 extern struct ball obj_ball[];
 extern unsigned int obj_num;
+extern struct rect field;
 
 void setup_carom3c(void);
 
