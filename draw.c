@@ -14,13 +14,14 @@ static struct {
   double y;
   double w;
   double h;
-} video = {0.0f, 0.0f, 680.0f, 480.0f};
+} video = {0.0f, 0.0f, 760.0f, 680.0f};
 
 static void cls(void);
 static void draw_table(struct rect);
 static void set_color(enum color);
 static void draw_sphere(double);
 static void draw_solid_sphere(double);
+static void draw_cue_aim(enum color);
 
 void
 draw_sphere(double r) {
@@ -91,8 +92,10 @@ redraw()
   cls();
 
   glPushMatrix();
-  glScalef(5.0f, 5.0f, 1.0f);
+  glScalef(8.0f, 8.0f, 1.0f);
 
+  draw_cue_aim(WHITE);
+  
   draw_ball(cue_ball, WHITE);
   draw_ball(obj_ball[0], YELLOW);
   draw_ball(obj_ball[1], RED);
@@ -101,6 +104,19 @@ redraw()
 
   glPopMatrix();
   glFlush();
+}
+
+void
+draw_cue_aim(enum color co)
+{
+  struct vec2 collid = aim_cue();
+
+  set_color(co);
+
+  glBegin(GL_LINE_STRIP);
+  glVertex2f(cue_ball.pos.x, cue_ball.pos.y);
+  glVertex2f(collid.x, collid.y);
+  glEnd();
 }
 
 void
@@ -116,6 +132,9 @@ initialize_gl()
 {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
+  glLineStipple(1, 0x3f07);
+  glEnable(GL_LINE_STIPPLE);
+  glLineWidth(2.0);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();

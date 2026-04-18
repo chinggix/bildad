@@ -8,7 +8,14 @@
 #include "xws.h"
 
 XEvent event;
-struct xws window;
+
+struct {
+  Display *dpy;
+  Window win;
+  int scr;
+  XVisualInfo *vis;
+  GLXContext ctx;
+} window;
 
 static int attr[] = {
   GLX_RGBA,
@@ -22,25 +29,6 @@ static int attr[] = {
 static void 	 xfatal(const char*, ...);
 static Window	 dumpwin(void);
 
-void
-run_x()
-{
-  for (;;) {
-    redraw();
-  }
-}
-
-void
-setup_xevent()
-{
-  while (XNextEvent(window.dpy, &event)) {
-    if (event.type == ConfigureNotify)
-      reshape_viewport(event.xconfigure.width, event.xconfigure.height);
-    if (event.type == MapNotify)
-      break;
-  }
-}
-
 Window
 dumpwin()
 {
@@ -48,7 +36,7 @@ dumpwin()
    * Dumb dimensions, since window managers would change these anyway
    */
   int bor = 0, top = 0, left = 0;
-  unsigned int w = 640, h = 480;
+  unsigned int w = 680, h = 760;
 
   Window root = XRootWindow(window.dpy, window.scr);
   Colormap cmap = XCreateColormap(window.dpy, root,
@@ -76,6 +64,28 @@ xfatal(const char *msg, ...)
   va_end(ap);
 
   exit(1);
+}
+
+void
+run_x()
+{
+  
+  for (;;) {
+    redraw();
+  }
+}
+
+void
+setup_xevent()
+{
+  XWindowAttributes xwa;
+  
+  while (XNextEvent(window.dpy, &event)) {
+      if (event.type == MapNotify) break;
+  }
+
+  XGetWindowAttributes(window.dpy, window.win, &xwa);
+  reshape_viewport(xwa.width, xwa.height);
 }
 
 void 

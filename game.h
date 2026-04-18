@@ -21,13 +21,15 @@ struct cue {
   double butt;
 };
 
-extern double 		 radius;
 extern enum game 	 game_type;
+extern double 		 radius;
 extern struct ball 	 cue_ball;
-extern struct ball 	 obj_ball[MAX_OBJ];
 extern unsigned int 	 obj_num;
+extern struct ball 	 obj_ball[MAX_OBJ];
 extern struct rect 	 field;
 extern struct cue 	 stick;
+
+struct vec2	 aim_cue(void);
 
 void setup_carom3c(void);
 
