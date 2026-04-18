@@ -4,6 +4,7 @@
 #include <X11/Xlib.h>
 #include <GL/glx.h>
 
+#include "draw.h"
 #include "xws.h"
 
 XEvent event;
@@ -22,19 +23,19 @@ static void 	 xfatal(const char*, ...);
 static Window	 dumpwin(void);
 
 void
-run_x(void (*draw)(void))
+run_x()
 {
   for (;;) {
-    (*draw)();
+    redraw();
   }
 }
 
 void
-setup_xevent(void (*reshape)(unsigned int, unsigned int))
+setup_xevent()
 {
   while (XNextEvent(window.dpy, &event)) {
     if (event.type == ConfigureNotify)
-      (*reshape) (event.xconfigure.width, event.xconfigure.height);
+      reshape_viewport(event.xconfigure.width, event.xconfigure.height);
     if (event.type == MapNotify)
       break;
   }

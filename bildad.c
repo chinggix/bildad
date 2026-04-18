@@ -8,9 +8,11 @@ int
 main(int argc, char **argv)
 {  
   initialize_x();
-  setup_xevent(reshape_viewport);
+  setup_xevent();
   initialize_gl();
   setup_carom3c();
+
+  run_x();
 
   return 0;
 }
