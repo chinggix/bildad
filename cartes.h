@@ -1,10 +1,18 @@
 #ifndef CARTES_H
 #define CARTES_H
 
-#define SQU(a) 		((a) * (a))
-#define DET2(a, b)	((a).x * (b).y - (a).y * (b).x)
-#define SGN(a)		((a) < 0 ? -1 : 1)
-#define DIST(a, b) 	(hypot((a).x - (b).x, (a).y - (b).y))
+#ifndef M_PI
+#define M_PI 3.1415926
+#endif
+
+#define SQU(a) ((a) * (a))
+#define DET2(a, b) ((a).x * (b).y - (a).y * (b).x)
+#define SGN(a) ((a) < 0 ? -1 : 1)
+#define DIST(a, b) (hypot((a).x - (b).x, (a).y - (b).y))
+#define ZEROF(a) ((a) > -0.0000001 && (a) < 0.000001)
+#define ALONG(a, b, v)	(SGN((b) - (a)) / (v))
+#define PTALONG(a, b, v)	(ALONG((a).x, (b).x, v.x) && \
+    				 ALONG((a).y, (b).y, v.y))
 
 struct vec2 {
   double x;
@@ -21,18 +29,14 @@ struct vec3 {
  * Sides parallel with coordinates
  */
 struct rect {
-  struct vec2 ll;	/* Lower-left */
-  struct vec2 ur;	/* Upper-right*/
+  struct vec2 ll; /* Lower-left */
+  struct vec2 ur; /* Upper-right*/
 };
 
-double 	 rect_width(struct rect);
-double 	 rect_length(struct rect);
-int	 near_line_circle_cross(struct vec2,
-				struct vec2,
-				struct vec2,
-				double,
-				struct vec2*);
-int	 line_rect_cross(struct vec2, struct vec2, struct rect, struct vec2*);
+double rect_width(struct rect);
+double rect_length(struct rect);
+int line_rect_cross(struct vec2, struct vec2, struct rect, struct vec2 *);
+int near_line_circle_itx(struct vec2, struct vec2, struct vec2, double,
+                         struct vec2 *);
 
-
-#endif	/* CARTES_H */
+#endif /* CARTES_H */

@@ -1,12 +1,10 @@
 #include <stdio.h>
 
-#include "xws.h"
 #include "draw.h"
 #include "game.h"
+#include "xws.h"
 
-int 
-main(int argc, char **argv)
-{  
+int main(void) {
   initialize_x();
   setup_xevent();
   initialize_gl();

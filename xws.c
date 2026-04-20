@@ -1,10 +1,11 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <X11/Xlib.h>
 #include <GL/glx.h>
+#include <X11/Xlib.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "draw.h"
+#include "game.h"
 #include "xws.h"
 
 XEvent event;
@@ -17,21 +18,15 @@ struct {
   GLXContext ctx;
 } window;
 
-static int attr[] = {
-  GLX_RGBA,
-  GLX_RED_SIZE,   1,
-  GLX_GREEN_SIZE, 1,
-  GLX_BLUE_SIZE,  1,
-  GLX_DEPTH_SIZE, 1,
-  None  
-};
+static int attr[] = {GLX_RGBA, GLX_RED_SIZE,  1, GLX_GREEN_SIZE,
+                     1,        GLX_BLUE_SIZE, 1, GLX_DEPTH_SIZE,
+                     1,        None};
 
-static void 	 xfatal(const char*, ...);
-static Window	 dumpwin(void);
+static void xfatal(const char *, ...);
+static Window dumpwin(void);
+static void kpress(void);
 
-Window
-dumpwin()
-{
+Window dumpwin() {
   /*
    * Dumb dimensions, since window managers would change these anyway
    */
@@ -39,59 +34,74 @@ dumpwin()
   unsigned int w = 680, h = 760;
 
   Window root = XRootWindow(window.dpy, window.scr);
-  Colormap cmap = XCreateColormap(window.dpy, root,
-				  window.vis->visual,
-				  AllocNone);
+  Colormap cmap =
+      XCreateColormap(window.dpy, root, window.vis->visual, AllocNone);
   XSetWindowAttributes swa;
   swa.colormap = cmap;
   swa.border_pixel = bor;
-  swa.event_mask = ExposureMask | ButtonPressMask | StructureNotifyMask;
+  swa.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask;
 
   return XCreateWindow(window.dpy, root, top, left, w, h, bor,
-		       window.vis->depth, InputOutput, window.vis->visual,
-		       CWBorderPixel | CWColormap | CWEventMask, &swa);
+                       window.vis->depth, InputOutput, window.vis->visual,
+                       CWBorderPixel | CWColormap | CWEventMask, &swa);
 }
 
-void
-xfatal(const char *msg, ...)
-{
+void xfatal(const char *msg, ...) {
   va_list ap;
 
   fputs("X ERROR: ", stderr);
 
   va_start(ap, msg);
-    vfprintf(stderr, msg, ap);
+  vfprintf(stderr, msg, ap);
   va_end(ap);
 
   exit(1);
 }
 
-void
-run_x()
-{
-  
+void kpress() {
+  XKeyEvent *kev = &(event.xkey);
+  KeySym key = NoSymbol;
+  char buf[64];
+
+  XLookupString(kev, buf, sizeof buf, &key, NULL);
+
+  switch (key) {
+  case XK_d:
+    rotate_cue(M_PI/50);
+    break;
+  case XK_a:
+    rotate_cue(-M_PI/50);
+    break;
+  }
+}
+
+void run_x() {
   for (;;) {
+    while (XPending(window.dpy)) {
+      XNextEvent(window.dpy, &event);
+      if (event.type == KeyPress) {
+        kpress();
+        printf("%f: %f\n", stick.drc.x, stick.drc.y);
+      }
+    }
     redraw();
   }
 }
 
-void
-setup_xevent()
-{
+void setup_xevent() {
   XWindowAttributes xwa;
-  
+
   while (XNextEvent(window.dpy, &event)) {
-      if (event.type == MapNotify) break;
+    if (event.type == MapNotify)
+      break;
   }
 
   XGetWindowAttributes(window.dpy, window.win, &xwa);
   reshape_viewport(xwa.width, xwa.height);
 }
 
-void 
-initialize_x()
-{
-  if (!(window.dpy = XOpenDisplay(NULL))) 
+void initialize_x() {
+  if (!(window.dpy = XOpenDisplay(NULL)))
     xfatal("Can not open display!\n");
 
   window.scr = XDefaultScreen(window.dpy);

@@ -1,10 +1,11 @@
 #include <GL/gl.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include "game.h"
 #include "draw.h"
+#include "cartes.h"
+#include "game.h"
 
 /*
  * TODO: Something wrong with this dimensions
@@ -23,12 +24,11 @@ static void draw_sphere(double);
 static void draw_solid_sphere(double);
 static void draw_cue_aim(enum color);
 
-void
-draw_sphere(double r) {
+void draw_sphere(double r) {
   int i, step;
   double rang, alpha;
 
-  step = 10; 	/* Increase this for smooth sphere */
+  step = 10; /* Increase this for smooth sphere */
   rang = 2.0f * M_PI / step;
 
   for (i = 0; i < step; ++i) {
@@ -37,17 +37,13 @@ draw_sphere(double r) {
   }
 }
 
-void
-draw_solid_sphere(double r)
-{
+void draw_solid_sphere(double r) {
   glBegin(GL_POLYGON);
   draw_sphere(r);
   glEnd();
 }
 
-void
-draw_ball(struct ball orb, enum color co)
-{
+void draw_ball(struct ball orb, enum color co) {
   set_color(co);
   glPushMatrix();
   glTranslatef(orb.pos.x, orb.pos.y, 0.0f);
@@ -55,35 +51,25 @@ draw_ball(struct ball orb, enum color co)
   glPopMatrix();
 }
 
-void
-set_color(enum color co)
-{
+void set_color(enum color co) {
   int i, hexd = co;
   double res[3];
   for (i = 0; i < 3; ++i) {
-    res[i] = (double) (hexd % 0x100) / 255.0f;
+    res[i] = (double)(hexd % 0x100) / 255.0f;
     hexd /= 0x100;
   }
 
   glColor3f(res[2], res[1], res[0]);
 }
 
-void
-draw_table(struct rect field)
-{
+void draw_table(struct rect field) {
   set_color(DARK_BLUE);
   glRectf(field.ll.x, field.ll.y, field.ur.x, field.ur.y);
 }
 
-void
-cls()
-{
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
+void cls() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
-void
-redraw()
-{
+void redraw() {
   if (game_type == BLANK) {
     fprintf(stderr, "Please initialize game!\n");
     exit(1);
@@ -92,10 +78,10 @@ redraw()
   cls();
 
   glPushMatrix();
-  glScalef(8.0f, 8.0f, 1.0f);
+  glScalef(7.0f, 7.0f, 1.0f);
 
   draw_cue_aim(WHITE);
-  
+
   draw_ball(cue_ball, WHITE);
   draw_ball(obj_ball[0], YELLOW);
   draw_ball(obj_ball[1], RED);
@@ -106,9 +92,7 @@ redraw()
   glFlush();
 }
 
-void
-draw_cue_aim(enum color co)
-{
+void draw_cue_aim(enum color co) {
   struct vec2 collid = aim_cue();
 
   set_color(co);
@@ -119,22 +103,18 @@ draw_cue_aim(enum color co)
   glEnd();
 }
 
-void
-reshape_viewport(unsigned int w, unsigned int h)
-{
+void reshape_viewport(unsigned int w, unsigned int h) {
   glViewport(video.x, video.y, w, h);
   video.w = w;
   video.h = h;
 }
 
-void
-initialize_gl()
-{
+void initialize_gl() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glLineStipple(1, 0x3f07);
   glEnable(GL_LINE_STIPPLE);
-  glLineWidth(2.0);
+  glLineWidth(3.0);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();

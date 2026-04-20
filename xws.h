@@ -1,8 +1,8 @@
 #ifndef XWF_H
 #define XWF_H
 
-#include <X11/Xlib.h>
 #include <GL/glx.h>
+#include <X11/Xlib.h>
 
 extern XEvent event;
 
