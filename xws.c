@@ -66,11 +66,17 @@ void kpress() {
   XLookupString(kev, buf, sizeof buf, &key, NULL);
 
   switch (key) {
+  case XK_w:
+    rotate_cue(-10 * M_PI/500);
+    break;
+  case XK_x:
+    rotate_cue(10 * M_PI/500);
+    break;
   case XK_d:
-    rotate_cue(M_PI/50);
+    rotate_cue(10 * M_PI/2000);
     break;
   case XK_a:
-    rotate_cue(-M_PI/50);
+    rotate_cue(-10 * M_PI/2000);
     break;
   }
 }

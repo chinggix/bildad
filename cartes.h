@@ -5,14 +5,16 @@
 #define M_PI 3.1415926
 #endif
 
-#define SQU(a) ((a) * (a))
-#define DET2(a, b) ((a).x * (b).y - (a).y * (b).x)
-#define SGN(a) ((a) < 0 ? -1 : 1)
-#define DIST(a, b) (hypot((a).x - (b).x, (a).y - (b).y))
-#define ZEROF(a) ((a) > -0.0000001 && (a) < 0.000001)
-#define ALONG(a, b, v)	(SGN((b) - (a)) / (v))
-#define PTALONG(a, b, v)	(ALONG((a).x, (b).x, v.x) && \
-    				 ALONG((a).y, (b).y, v.y))
+#define SQU(a) 			((a) * (a))
+#define DET2(a, b) 		((a).x * (b).y - (a).y * (b).x)
+#define SGN(a) 			((a) < 0 ? -1 : 1)
+#define DIST(a, b) 		(hypot((a).x - (b).x, (a).y - (b).y))
+#define EPS			0.000001
+#define ZEROF(a) 		((a) > -EPS && (a) < EPS)
+#define ALONG(a, b, v) 		((v) > EPS ? ((b) - (a) > EPS * (v)) :\
+    				((b) - (a) < EPS * (v)))
+#define PTALONG(a, b, v)	(ALONG((a).x, (b).x, (v).x) && \
+    				 ALONG((a).y, (b).y, (v).y))
 
 struct vec2 {
   double x;

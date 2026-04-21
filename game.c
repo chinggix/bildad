@@ -44,8 +44,8 @@ struct vec2 aim_cue()
   game_null_test();
 
   for (i = 0; i < obj_num; ++i) {
-    if (near_line_circle_itx(cue_ball.pos, stick.drc, obj_ball[i].pos,
-                             2 * radius, &res))
+    if (near_line_circle_itx(cue_ball.pos, stick.drc, 
+    			     obj_ball[i].pos, 2 * radius, &res))
       return res;
   }
 

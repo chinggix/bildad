@@ -80,7 +80,7 @@ void redraw() {
   glPushMatrix();
   glScalef(7.0f, 7.0f, 1.0f);
 
-  draw_cue_aim(WHITE);
+  draw_cue_aim(GREY);
 
   draw_ball(cue_ball, WHITE);
   draw_ball(obj_ball[0], YELLOW);
@@ -101,6 +101,13 @@ void draw_cue_aim(enum color co) {
   glVertex2f(cue_ball.pos.x, cue_ball.pos.y);
   glVertex2f(collid.x, collid.y);
   glEnd();
+
+  glPushMatrix();
+  glTranslatef(collid.x, collid.y, 0.0f);
+  glBegin(GL_LINE_STRIP);
+  draw_sphere(radius);
+  glEnd();
+  glPopMatrix();
 }
 
 void reshape_viewport(unsigned int w, unsigned int h) {
@@ -112,9 +119,9 @@ void reshape_viewport(unsigned int w, unsigned int h) {
 void initialize_gl() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
-  glLineStipple(1, 0x3f07);
+  glLineStipple(3, 0xAAAA);
   glEnable(GL_LINE_STIPPLE);
-  glLineWidth(3.0);
+  glLineWidth(2.0);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();

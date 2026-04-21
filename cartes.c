@@ -1,5 +1,5 @@
-#include "cartes.h"
 #include <math.h>
+#include "cartes.h"
 
 static struct vec2 translate_xy(struct vec2, double, double);
 
@@ -29,20 +29,22 @@ int near_line_circle_itx(struct vec2 pnt, struct vec2 drc, struct vec2 org,
   B = 	drc.x;
   C = DET2(pnt, drc);
 
-  dvr = SQU(hypot(A, B));
+  dvr = SQU(A) + SQU(B);
+
+  if (SQU(C) > SQU(r) * dvr + EPS)
+    return 0;
+
   x0 = -A * C / dvr;
   y0 = -B * C / dvr;
 
-  if (dvr - SQU(C) < 0)
-    return 0;
-
-  if (ZEROF(dvr - SQU(C))) {
+  if (ZEROF(SQU(C) - SQU(r) * dvr)) {
     res->x = x0;
     res->y = y0;
 
     if (!PTALONG(pnt, *res, drc)) return 0;
 
     *res = translate_xy(*res, org.x, org.y);
+    return 1;
   }
 
   dis = SQU(r) - SQU(C) / dvr;
@@ -63,11 +65,13 @@ int near_line_circle_itx(struct vec2 pnt, struct vec2 drc, struct vec2 org,
     }
   } else if (PTALONG(pnt, a, drc)) {
     res->x = a.x;
-    res->x = a.y;
+    res->y = a.y;
   } else if (PTALONG(pnt, b, drc)) {
     res->x = b.x;
     res->y = b.y;
-  } else return 0;
+  } else {
+    return 0;
+  }
   
   *res = translate_xy(*res, org.x, org.y);
   return 1;
