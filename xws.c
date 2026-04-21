@@ -11,113 +11,128 @@
 XEvent event;
 
 struct {
-  Display *dpy;
-  Window win;
-  int scr;
-  XVisualInfo *vis;
-  GLXContext ctx;
+	Display *dpy;
+	Window win;
+	int scr;
+	XVisualInfo *vis;
+	GLXContext ctx;
 } window;
 
-static int attr[] = {GLX_RGBA, GLX_RED_SIZE,  1, GLX_GREEN_SIZE,
-                     1,        GLX_BLUE_SIZE, 1, GLX_DEPTH_SIZE,
-                     1,        None};
+static int attr[] = { GLX_RGBA, GLX_RED_SIZE,  1, GLX_GREEN_SIZE,
+		      1,	GLX_BLUE_SIZE, 1, GLX_DEPTH_SIZE,
+		      1,	None };
 
 static void xfatal(const char *, ...);
 static Window dumpwin(void);
 static void kpress(void);
 
-Window dumpwin() {
-  /*
+Window dumpwin()
+{
+	/*
    * Dumb dimensions, since window managers would change these anyway
    */
-  int bor = 0, top = 0, left = 0;
-  unsigned int w = 680, h = 760;
+	int bor = 0, top = 0, left = 0;
+	unsigned int w = 680, h = 760;
 
-  Window root = XRootWindow(window.dpy, window.scr);
-  Colormap cmap =
-      XCreateColormap(window.dpy, root, window.vis->visual, AllocNone);
-  XSetWindowAttributes swa;
-  swa.colormap = cmap;
-  swa.border_pixel = bor;
-  swa.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask;
+	Window root = XRootWindow(window.dpy, window.scr);
+	Colormap cmap = XCreateColormap(window.dpy, root, window.vis->visual,
+					AllocNone);
+	XSetWindowAttributes swa;
+	swa.colormap = cmap;
+	swa.border_pixel = bor;
+	swa.event_mask = ExposureMask | KeyPressMask | StructureNotifyMask;
 
-  return XCreateWindow(window.dpy, root, top, left, w, h, bor,
-                       window.vis->depth, InputOutput, window.vis->visual,
-                       CWBorderPixel | CWColormap | CWEventMask, &swa);
+	return XCreateWindow(window.dpy, root, top, left, w, h, bor,
+			     window.vis->depth, InputOutput, window.vis->visual,
+			     CWBorderPixel | CWColormap | CWEventMask, &swa);
 }
 
-void xfatal(const char *msg, ...) {
-  va_list ap;
+void xfatal(const char *msg, ...)
+{
+	va_list ap;
 
-  fputs("X ERROR: ", stderr);
+	fputs("X ERROR: ", stderr);
 
-  va_start(ap, msg);
-  vfprintf(stderr, msg, ap);
-  va_end(ap);
+	va_start(ap, msg);
+	vfprintf(stderr, msg, ap);
+	va_end(ap);
 
-  exit(1);
+	exit(1);
 }
 
-void kpress() {
-  XKeyEvent *kev = &(event.xkey);
-  KeySym key = NoSymbol;
-  char buf[64];
+void kpress()
+{
+	XKeyEvent *kev = &(event.xkey);
+	KeySym key = NoSymbol;
+	char buf[64];
 
-  XLookupString(kev, buf, sizeof buf, &key, NULL);
+	XLookupString(kev, buf, sizeof buf, &key, NULL);
 
-  switch (key) {
-  case XK_w:
-    rotate_cue(-10 * M_PI/500);
-    break;
-  case XK_x:
-    rotate_cue(10 * M_PI/500);
-    break;
-  case XK_d:
-    rotate_cue(10 * M_PI/2000);
-    break;
-  case XK_a:
-    rotate_cue(-10 * M_PI/2000);
-    break;
-  }
+	switch (key) {
+	case XK_w:
+		rotate_cue(-10 * M_PI / 500);
+		break;
+	case XK_x:
+		rotate_cue(10 * M_PI / 500);
+		break;
+	case XK_d:
+		rotate_cue(10 * M_PI / 2000);
+		break;
+	case XK_a:
+		rotate_cue(-10 * M_PI / 2000);
+		break;
+	case XK_p:
+		strike_cue_ball(100.0, 0.0, 0.0);
+		break;
+	}
 }
 
-void run_x() {
-  for (;;) {
-    while (XPending(window.dpy)) {
-      XNextEvent(window.dpy, &event);
-      if (event.type == KeyPress) {
-        kpress();
-        printf("%f: %f\n", stick.drc.x, stick.drc.y);
-      }
-    }
-    redraw();
-  }
+void run_x()
+{
+	int drawing;
+
+	for (drawing = 0;;) {
+		while (XPending(window.dpy)) {
+			XNextEvent(window.dpy, &event);
+			if (event.type == KeyPress) {
+				kpress();
+				drawing = 0;
+				printf("%f: %f\n", stick.drc.x, stick.drc.y);
+			}
+		}
+		if (!drawing) {
+			drawing = 1;
+			redraw();
+		}
+	}
 }
 
-void setup_xevent() {
-  XWindowAttributes xwa;
+void setup_xevent()
+{
+	XWindowAttributes xwa;
 
-  while (XNextEvent(window.dpy, &event)) {
-    if (event.type == MapNotify)
-      break;
-  }
+	while (XNextEvent(window.dpy, &event)) {
+		if (event.type == MapNotify)
+			break;
+	}
 
-  XGetWindowAttributes(window.dpy, window.win, &xwa);
-  reshape_viewport(xwa.width, xwa.height);
+	XGetWindowAttributes(window.dpy, window.win, &xwa);
+	reshape_viewport(xwa.width, xwa.height);
 }
 
-void initialize_x() {
-  if (!(window.dpy = XOpenDisplay(NULL)))
-    xfatal("Can not open display!\n");
+void initialize_x()
+{
+	if (!(window.dpy = XOpenDisplay(NULL)))
+		xfatal("Can not open display!\n");
 
-  window.scr = XDefaultScreen(window.dpy);
+	window.scr = XDefaultScreen(window.dpy);
 
-  if (!(window.vis = glXChooseVisual(window.dpy, window.scr, attr)))
-    xfatal("Failed to get Visual\n");
+	if (!(window.vis = glXChooseVisual(window.dpy, window.scr, attr)))
+		xfatal("Failed to get Visual\n");
 
-  window.ctx = glXCreateContext(window.dpy, window.vis, None, 1);
-  window.win = dumpwin();
+	window.ctx = glXCreateContext(window.dpy, window.vis, None, 1);
+	window.win = dumpwin();
 
-  glXMakeCurrent(window.dpy, window.win, window.ctx);
-  XMapWindow(window.dpy, window.win);
+	glXMakeCurrent(window.dpy, window.win, window.ctx);
+	XMapWindow(window.dpy, window.win);
 }
