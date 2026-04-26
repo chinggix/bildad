@@ -10,12 +10,17 @@ struct ball cue_ball;
 struct ball obj_ball[MAX_OBJ];
 unsigned int obj_num; /* Number of object balls */
 double radius;
+double mass;
 struct rect field; /* Playing field */
 struct cue stick;
 
-static void gamefatal(const char *, ...);
-static void game_null_test(void);
-static void is_halt(void);
+static void	gamefatal(const char *, ...);
+static void	game_null_test(void);
+static int	is_halt(void);
+static void  	wander(struct ball*); 
+static void 	rotate(struct ball*);
+static void 	slide(struct ball*);
+static int 	is_vlo_vanish(struct vec2*);
 
 void gamefatal(const char *msg, ...)
 {
@@ -34,6 +39,96 @@ void game_null_test()
 {
 	if (game_type == BLANK)
 		gamefatal("Initalize game first!\n");
+}
+
+int is_halt()
+{
+	int i;
+
+	if (!(ZEROF(cue_ball.vct.x) && ZEROF(cue_ball.vct.y)))
+		return 0;
+	if (!(ZEROF(cue_ball.vlo.x) && ZEROF(cue_ball.vlo.y)))
+		return 0;
+	if (!(ZEROF(cue_ball.rot.x) && ZEROF(cue_ball.rot.y) &&
+	      ZEROF(cue_ball.rot.z)))
+		return 0;
+
+	for (i = 0; i < obj_num; ++i) {
+		if (!(ZEROF(obj_ball[i].vlo.x) && ZEROF(obj_ball[i].vlo.y)))
+			return 0;
+		if (!(ZEROF(obj_ball[i].rot.x) && ZEROF(obj_ball[i].rot.y) &&
+		      ZEROF(obj_ball[i].rot.z)))
+			return 0;
+	}
+
+	return 1;
+}
+
+int 
+is_vlo_vanish(struct vec2 *vlo)
+{
+	int qry;
+
+	qry = 0;
+
+	if (vlo->x < EPS) {
+		qry = 1;
+		vlo->x = 0.0;
+	}
+	if (vlo->y < EPS) {
+		qry = 1;
+		vlo->y = 0.0;
+	}
+
+	return qry;
+}
+
+void 
+slide(struct ball *b)
+{
+	double dvr;
+	(b->pos).x += (b->vlo).x;
+	(b->pos).y += (b->vlo).y;
+	
+	dvr = hypot((b->vct).x, (b->vct).y);
+	(b->vlo).x += MI * G0 * (b->vct).x / dvr;
+	(b->vlo).y += MI * G0 * (b->vct).y / dvr;
+
+	(b->rot).x += (5 / 2) * MI * G0 * (b->vct).y / (dvr * radius * -1);
+	(b->rot).y += (5 / 2) * MI * G0 * (b->vct).x / (dvr * radius);
+	(b->rot).z += (5 / 2) * MUZ * SGN((b->rot).z) / (mass * SQU(radius));
+
+	(b->vct).x -= MUX;
+	(b->vct).y -= MUY;
+}
+
+void 
+rotate(struct ball *b)
+{
+	double dvr;
+	(b->pos).x += (b->vlo).x;
+	(b->pos).y += (b->vlo).y;
+	
+	dvr = hypot((b->rot).x, (b->rot).y);
+	(b->vlo).x += 5 * MUY * (b->rot).y / (mass * radius * dvr * -7);
+	(b->vlo).y += 5 * MUX * (b->rot).x / (mass * radius * dvr * -7);
+
+	(b->rot).x += 5 * MUX * G0 * (b->rot).x / 
+		      (mass * dvr * SQU(radius) * -7);
+	(b->rot).y += 5 * MUY * G0 * (b->rot).y / 
+		      (mass * dvr * SQU(radius) * -7);
+	(b->rot).z += 5 * MUZ * G0 * (b->rot).z / 
+		      (mass * dvr * SQU(radius) * -7);
+}
+
+void 
+wander(struct ball *b)
+{
+	if (!is_vlo_vanish(&(b->vct))) {
+		slide(b);
+	} else if (!is_vlo_vanish(&(b->vlo))) {
+		rotate(b);
+	}
 }
 
 struct vec2 aim_cue()
@@ -98,8 +193,8 @@ void strike_cue_ball(double acc, double ang, double r)
 	/* Omega */
 	double omg;
 
-	cue_ball.vlo.x = acc * stick.drc.x;
-	cue_ball.vlo.y = acc * stick.drc.y;
+	cue_ball.vct.x = acc * stick.drc.x;
+	cue_ball.vct.y = acc * stick.drc.y;
 
 	cue_ball.rot.z = (r / radius) * sin(ang);
 	omg = (r / radius) * cos(ang);
@@ -108,29 +203,13 @@ void strike_cue_ball(double acc, double ang, double r)
 	cue_ball.rot.y = omg * stick.drc.y;
 }
 
-int is_halt()
+int
+motion()
 {
-	int i;
-
-	if (!(ZEROF(cue_ball.vlo.x) && ZEROF(cue_ball.vlo.y)))
+	if (!is_halt()) {
+		wander(&cue_ball);
 		return 1;
-	if (!(ZEROF(cue_ball.rot.x) && ZEROF(cue_ball.rot.y) &&
-	      ZEROF(cue_ball.rot.z)))
-		return 1;
-
-	for (i = 0; i < obj_num; ++i) {
-		if (!(ZEROF(obj_ball[i].vlo.x) && ZEROF(obj_ball[i].vlo.y)))
-			return 1;
-		if (!(ZEROF(obj_ball[i].rot.x) && ZEROF(obj_ball[i].rot.y) &&
-		      ZEROF(obj_ball[i].rot.z)))
-			return 1;
-	}
-
-	return 0;
-}
-
-int motioning()
-{
-	if (is_halt())
+	} else {
 		return 0;
+	}		
 }

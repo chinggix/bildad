@@ -138,9 +138,9 @@ int line_rect_cross(struct vec2 pnt, struct vec2 drc, struct rect rec,
 	}
 
 	/*
-   * drc.x * gradient = x0
-   * drc.y * gradient = y0
-   */
+	 * drc.x * gradient = x0
+	 * drc.y * gradient = y0
+	 */
 
 	/* Test with y = y0 */
 	dx = x0 / drc.x;

@@ -2,15 +2,15 @@
 #define CARTES_H
 
 #ifndef M_PI
-#define M_PI 3.1415926
+#define M_PI 	3.1415926
 #endif
+#define EPS 	0.000001
 
-#define EPS 0.000001
-#define ZEROF(a) ((a) > -EPS && (a) < EPS)
-#define SQU(a) ((a) * (a))
-#define DET2(a, b) ((a).x * (b).y - (a).y * (b).x)
-#define SGN(a) (ZEROF(a) ? 0 : ((a) < EPS ? -1 : 1))
-#define DIST(a, b) (hypot((a).x - (b).x, (a).y - (b).y))
+#define ZEROF(a) 	((a) > -EPS && (a) < EPS)
+#define SQU(a) 		((a) * (a))
+#define DET2(a, b) 	((a).x * (b).y - (a).y * (b).x)
+#define SGN(a) 		(ZEROF(a) ? 0 : ((a) < EPS ? -1 : 1))
+#define DIST(a, b) 	(hypot((a).x - (b).x, (a).y - (b).y))
 #define ALONG(a, b, v) \
 	((v) > EPS ? ((b) - (a) > EPS * (v)) : ((b) - (a) < EPS * (v)))
 #define PTALONG(a, b, v) \

@@ -30,7 +30,8 @@ void setup_carom3c()
 	field.ur.y = 100.0;
 
 	sight = rect_width(field) / 4.0;
-	radius = 1.5f;
+	radius = 1.5;
+	mass = 0.155;
 	obj_num = 2;
 
 	obj_ball[0].pos.x = 2.0 * sight;
@@ -42,9 +43,9 @@ void setup_carom3c()
 	cue_ball.pos.x = 1.5 * sight;
 	cue_ball.pos.y = 2.0 * sight;
 
-	stick.drc.x = 0.0f;
-	stick.drc.y = 1.0f;
-	stick.len = 4.5f;
-	stick.tip = 0.0035f;
-	stick.butt = 0.0045f;
+	stick.drc.x = 0.0;
+	stick.drc.y = 1.0;
+	stick.len = 4.5;
+	stick.tip = 0.0035;
+	stick.butt = 0.0045;
 }

@@ -29,8 +29,8 @@ static void kpress(void);
 Window dumpwin()
 {
 	/*
-   * Dumb dimensions, since window managers would change these anyway
-   */
+	 * Dumb dimensions, since window managers would change these anyway
+	 */
 	int bor = 0, top = 0, left = 0;
 	unsigned int w = 680, h = 760;
 
@@ -83,6 +83,7 @@ void kpress()
 		break;
 	case XK_p:
 		strike_cue_ball(100.0, 0.0, 0.0);
+		printf("%f\t%f\n", cue_ball.vct.x, cue_ball.vct.y);
 		break;
 	}
 }
@@ -97,11 +98,13 @@ void run_x()
 			if (event.type == KeyPress) {
 				kpress();
 				drawing = 0;
-				printf("%f: %f\n", stick.drc.x, stick.drc.y);
 			}
 		}
 		if (!drawing) {
 			drawing = 1;
+			redraw();
+		}
+		while (motion()) {
 			redraw();
 		}
 	}
