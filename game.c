@@ -49,14 +49,16 @@ int is_halt()
 		return 0;
 	if (!(ZEROF(cue_ball.vlo.x) && ZEROF(cue_ball.vlo.y)))
 		return 0;
-	if (!(ZEROF(cue_ball.rot.x) && ZEROF(cue_ball.rot.y) &&
+	if (!(ZEROF(cue_ball.rot.x) && 
+	      ZEROF(cue_ball.rot.y) &&
 	      ZEROF(cue_ball.rot.z)))
 		return 0;
 
 	for (i = 0; i < obj_num; ++i) {
 		if (!(ZEROF(obj_ball[i].vlo.x) && ZEROF(obj_ball[i].vlo.y)))
 			return 0;
-		if (!(ZEROF(obj_ball[i].rot.x) && ZEROF(obj_ball[i].rot.y) &&
+		if (!(ZEROF(obj_ball[i].rot.x) && 
+		      ZEROF(obj_ball[i].rot.y) &&
 		      ZEROF(obj_ball[i].rot.z)))
 			return 0;
 	}

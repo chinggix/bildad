@@ -18,9 +18,13 @@ struct {
 	GLXContext ctx;
 } window;
 
-static int attr[] = { GLX_RGBA, GLX_RED_SIZE,  1, GLX_GREEN_SIZE,
-		      1,	GLX_BLUE_SIZE, 1, GLX_DEPTH_SIZE,
-		      1,	None };
+static int attr[] = { GLX_RGBA, 
+		      GLX_RED_SIZE,  	1, 
+		      GLX_GREEN_SIZE, 	1,	
+		      GLX_BLUE_SIZE, 	1, 
+		      GLX_ALPHA_SIZE, 	1,
+		      GLX_DEPTH_SIZE, 	1,	
+		      None };
 
 static void xfatal(const char *, ...);
 static Window dumpwin(void);
@@ -81,7 +85,22 @@ void kpress()
 	case XK_a:
 		rotate_cue(-10 * M_PI / 2000);
 		break;
-	case XK_p:
+	case XK_i:
+		inspecting();
+		break;
+	case XK_Left:
+		adjust_inspect(10.0, 0.0);
+		break;
+	case XK_Right:
+		adjust_inspect(-10.0, 0.0);
+		break;
+	case XK_Up:
+		adjust_inspect(0.0, -10.0);
+		break;
+	case XK_Down:
+		adjust_inspect(0.0, 10.0);
+		break;
+	case XK_Return:
 		strike_cue_ball(100.0, 0.0, 0.0);
 		printf("%f\t%f\n", cue_ball.vct.x, cue_ball.vct.y);
 		break;

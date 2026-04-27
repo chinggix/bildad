@@ -13,7 +13,7 @@
 #define G0	9.80665		/* Earth gravitational constant */
 
 enum game 	{ BLANK, CAROM };
-enum contact    { BED, BALL, RAIL };
+enum impact	{ BED, BALL, RAIL };
 
 struct ball {
 	struct vec2 pos;

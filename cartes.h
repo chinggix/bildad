@@ -6,6 +6,7 @@
 #endif
 #define EPS 	0.000001
 
+#define MIN(a, b) 	((a) < (b) ? (a) : (b))
 #define ZEROF(a) 	((a) > -EPS && (a) < EPS)
 #define SQU(a) 		((a) * (a))
 #define DET2(a, b) 	((a).x * (b).y - (a).y * (b).x)

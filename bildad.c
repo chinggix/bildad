@@ -8,7 +8,7 @@ int main(void)
 {
 	initialize_x();
 	setup_xevent();
-	initialize_gl();
+	initialize_grape();
 	setup_carom3c();
 
 	run_x();
