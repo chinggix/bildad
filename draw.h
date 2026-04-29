@@ -14,9 +14,11 @@ void initialize_grape(void);
 void reshape_viewport(unsigned int, unsigned int);
 void inspecting(void);
 void adjust_inspect(double x, double y);
+void hitting(void);
 
 void redraw(void);
 
 extern struct vec2 hit;
+extern int is_motion;
 
 #endif /* DRAW_H */

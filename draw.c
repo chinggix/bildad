@@ -24,6 +24,7 @@ static struct {
 } inspect;
 
 struct vec2 hit;
+int is_motion;
 
 static void initialize_gl(void);
 static void cls(void);
@@ -173,7 +174,8 @@ redraw()
 		draw_ball(obj_ball[0], YELLOW);
 		draw_ball(obj_ball[1], RED);
 
-		draw_cue_aim(GREY);
+		if (!is_motion) 
+			draw_cue_aim(GREY);
 
 	glPopMatrix();
 
@@ -236,6 +238,7 @@ initialize_gl()
 void
 initialize_grape()
 {
+	is_motion = 0;
 	inspect.drawing = 0;
 
 	hit.x = 0;
@@ -273,5 +276,22 @@ adjust_inspect(double x, double y)
 		return;
 
 	hit = res;
-	printf("Succed!\n");
+}
+
+void
+hitting()
+{
+	double r, ang;
+	inspect.drawing = 0;
+
+	if (ZEROF(hit.x)) {
+		ang = hit.y < EPS ? M_PI / 2 : 3 * M_PI / 2;
+	} else if (ZEROF(hit.y)) {
+		ang = hit.x < EPS ? M_PI : 0.0;
+	} else {
+		ang = atan(hit.x / hit.y);
+	}
+	r = radius * hypot(hit.x, hit.y) / inspect.r;
+	
+	strike_cue_ball(15.0, ang, r);
 }

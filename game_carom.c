@@ -31,8 +31,9 @@ void setup_carom3c()
 
 	sight = rect_width(field) / 4.0;
 	radius = 1.5;
-	mass = 0.155;
+	mass = 0.17;
 	obj_num = 2;
+	cue_ball_rotating = 0;
 
 	obj_ball[0].pos.x = 2.0 * sight;
 	obj_ball[0].pos.y = 2.0 * sight;

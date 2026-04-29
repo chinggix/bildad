@@ -101,8 +101,7 @@ void kpress()
 		adjust_inspect(0.0, 10.0);
 		break;
 	case XK_Return:
-		strike_cue_ball(100.0, 0.0, 0.0);
-		printf("%f\t%f\n", cue_ball.vct.x, cue_ball.vct.y);
+		hitting();
 		break;
 	}
 }
@@ -123,7 +122,7 @@ void run_x()
 			drawing = 1;
 			redraw();
 		}
-		while (motion()) {
+		while ((is_motion = motion())) {
 			redraw();
 		}
 	}
