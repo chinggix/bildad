@@ -74,16 +74,16 @@ void kpress()
 
 	switch (key) {
 	case XK_w:
-		rotate_cue(-10 * M_PI / 500);
+		adjust_cue(-10 * M_PI / 500);
 		break;
 	case XK_x:
-		rotate_cue(10 * M_PI / 500);
+		adjust_cue(10 * M_PI / 500);
 		break;
 	case XK_d:
-		rotate_cue(10 * M_PI / 2000);
+		adjust_cue(10 * M_PI / 2000);
 		break;
 	case XK_a:
-		rotate_cue(-10 * M_PI / 2000);
+		adjust_cue(-10 * M_PI / 2000);
 		break;
 	case XK_i:
 		inspecting();

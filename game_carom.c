@@ -33,7 +33,6 @@ void setup_carom3c()
 	radius = 1.5;
 	mass = 0.17;
 	obj_num = 2;
-	cue_ball_rotating = 0;
 
 	obj_ball[0].pos.x = 2.0 * sight;
 	obj_ball[0].pos.y = 2.0 * sight;
@@ -49,4 +48,24 @@ void setup_carom3c()
 	stick.len = 4.5;
 	stick.tip = 0.0035;
 	stick.butt = 0.0045;
+
+	halt_all_motion();
+}
+
+void 
+halt_all_motion()
+{
+	MPTY2(obj_ball[0].vlo);
+	MPTY3(obj_ball[0].rot);
+	MPTY2(obj_ball[1].vlo);
+	MPTY3(obj_ball[1].rot);
+	MPTY2(cue_ball.vlo);
+	MPTY3(cue_ball.rot);
+}
+
+void
+halt_motion(struct ball *b)
+{
+	MPTY2(b->vlo);
+	MPTY3(b->rot);
 }

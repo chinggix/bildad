@@ -23,6 +23,7 @@ struct ball {
 	struct vec2 pos;
 	struct vec2 vlo;
 	struct vec3 rot;
+	int sliding;
 };
 
 struct cue {
@@ -40,13 +41,14 @@ extern unsigned int 	obj_num;
 extern struct ball 	obj_ball[MAX_OBJ];
 extern struct rect 	field;
 extern struct cue 	stick;
-extern int 		cue_ball_rotating;
 
 struct vec2 	aim_cue(void);
-void 		rotate_cue(double);
+void 		adjust_cue(double);
 void 		strike_cue_ball(double, double, double);
 int 		motion(void);
 
 void 		setup_carom3c(void);
+void 		halt_all_motion(void);
+void		halt_motion(struct ball*);
 
 #endif /* GAME_H */

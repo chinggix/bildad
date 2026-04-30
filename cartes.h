@@ -17,6 +17,9 @@
 #define PTALONG(a, b, v) \
 	(ALONG((a).x, (b).x, (v).x) && ALONG((a).y, (b).y, (v).y))
 
+#define MPTY2(a) 	((a).x = (a).y = 0.0)
+#define MPTY3(a) 	((a).x = (a).y = (a).z = 0.0)
+
 struct vec2 {
 	double x;
 	double y;

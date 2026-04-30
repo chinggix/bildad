@@ -51,11 +51,6 @@ draw_curtain()
 void 
 draw_inspecting_ball()
 {
-	inspect.org.x = video.w / 2;
-	inspect.org.y = video.h / 2;
-
-	inspect.r = MIN(inspect.org.x, inspect.org.y) / 2;
-
 	glEnable(GL_DEPTH_TEST);
 	set_color(WHITE);
 	glPushMatrix();
@@ -241,10 +236,15 @@ initialize_grape()
 	is_motion = 0;
 	inspect.drawing = 0;
 
-	hit.x = 0;
-	hit.y = 0;
+	hit.x = 0.0;
+	hit.y = 0.0;
 
 	initialize_gl();
+
+	inspect.org.x = video.w / 2;
+	inspect.org.y = video.h / 2;
+
+	inspect.r = MIN(inspect.org.x, inspect.org.y) / 2;
 }
 
 void 
@@ -291,6 +291,7 @@ hitting()
 	} else {
 		ang = atan(hit.x / hit.y);
 	}
+	printf("%f\t%f\n", hypot(hit.x, hit.y), inspect.r);
 	r = radius * hypot(hit.x, hit.y) / inspect.r;
 	
 	strike_cue_ball(15.0, ang, r);

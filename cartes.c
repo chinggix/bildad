@@ -161,10 +161,10 @@ int line_rect_cross(struct vec2 pnt, struct vec2 drc, struct rect rec,
 int
 is_inside_rect(struct vec2 pnt, struct rect qud)
 {
-	if (pnt.x <= qud.ll.x || pnt.y <= qud.ll.y)
+	if (pnt.x < qud.ll.x || pnt.y < qud.ll.y)
 		return 0;
 
-	if (pnt.x >= qud.ur.x || pnt.y >= qud.ur.y)
+	if (pnt.x > qud.ur.x || pnt.y > qud.ur.y)
 		return 0;
 
 	return 1;
