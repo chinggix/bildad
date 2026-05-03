@@ -10,4 +10,6 @@ bildad: $(OBJ)
 clear: 
 	rm -rf $(OBJ) bildad
 
-.PHONY : clear
+clean: clear
+
+.PHONY : clear clean

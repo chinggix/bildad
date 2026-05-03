@@ -12,7 +12,8 @@
 #define G0	9.80665		/* Earth gravitational constant */
 #define ETA	0.2
 #define THETA 	1.32843		/* Noise cushion angle wrt balls */
-#define VAPR 	0.98
+#define VAPR 	0.98 		/* Vaporous impact constant */
+#define DEL_T 	0.005
 
 #define LEN(a) 	(sizeof(a) / sizeof((a)[0]))
 

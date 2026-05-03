@@ -4,7 +4,7 @@
 #ifndef M_PI
 #define M_PI 	3.1415926
 #endif
-#define EPS 	0.0001
+#define EPS 	0.0000001
 
 #define MIN(a, b) 	((a) < (b) ? (a) : (b))
 #define ZEROF(a) 	((a) > -EPS && (a) < EPS)
@@ -39,11 +39,16 @@ struct rect {
 	struct vec2 ur; /* Upper-right*/
 };
 
-double 	rect_width(struct rect);
-double 	rect_length(struct rect);
-int line_rect_cross(struct vec2, struct vec2, struct rect, struct vec2 *);
+int line_rect_cross(struct vec2, struct vec2, struct rect, struct vec2*);
 int near_line_circle_itx(struct vec2, struct vec2, struct vec2, double,
 			 struct vec2 *);
-int 	is_inside_rect(struct vec2, struct rect);
+
+double 		 rect_width(struct rect);
+double 		 rect_length(struct rect);
+int 		 is_inside_rect(struct vec2, struct rect);
+struct vec2 	 twirl_coor2(struct vec2, double);
+struct rect	 zoom_rect(struct rect, double);
+double 		*sparse_rect(struct rect);
+double		*sparse_rect_all_edges(struct rect);
 
 #endif /* CARTES_H */

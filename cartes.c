@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdlib.h>
 #include "cartes.h"
 
 static struct vec2 translate_xy(struct vec2, double, double);
@@ -168,4 +169,87 @@ is_inside_rect(struct vec2 pnt, struct rect qud)
 		return 0;
 
 	return 1;
+}
+
+/*
+ * Twirl the original coordiate (x, y) to a new one (a, b) by angle.
+ */
+struct vec2 
+twirl_coor2(struct vec2 pnt, double ang)
+{
+	struct vec2 res;
+	double xa, xb, ya, yb;
+
+	xa = pnt.x * cos(ang);
+	xb = pnt.x * sin(ang);
+	
+	ya = pnt.y * sin(ang);
+	yb = pnt.y * cos(ang);
+	
+	res.x = xa - ya;
+	res.y = xb + yb;
+
+	return res;
+}
+
+struct rect
+zoom_rect(struct rect quad, double factor)
+{
+	struct rect res;
+
+	res.ur.x = quad.ur.x + factor;
+	res.ur.y = quad.ur.y + factor;
+	res.ll.x = quad.ll.x - factor;
+	res.ll.y = quad.ll.y - factor;
+
+	return res;
+}
+
+/*
+ * Spare rectangle variables into an array
+ */
+double*
+sparse_rect(struct rect quad)
+{
+	double *res;
+
+	res = (double *) calloc(4, sizeof(double));
+
+	if (res != NULL) {
+		res[0] = quad.ll.x;
+		res[1] = quad.ll.y;
+		res[2] = quad.ur.x;
+		res[3] = quad.ur.y;
+	}
+
+	return res;
+}
+
+/*
+ * Sparse all edges of rectangle
+ */
+double*
+sparse_rect_all_edges(struct rect quad)
+{
+	double *ps, *rs;
+
+	ps = sparse_rect(quad);
+	if (!ps)
+		return NULL;
+
+	rs = (double *) calloc(8, sizeof(double));	
+	if (rs != NULL) {
+		rs[0] = ps[2];
+		rs[1] = ps[0];
+		rs[2] = ps[0];
+		rs[3] = ps[2];
+
+		rs[4] = ps[3];
+		rs[5] = ps[3];
+		rs[6] = ps[1];
+		rs[7] = ps[1];
+	}
+
+	free(ps);
+	return rs;
 }

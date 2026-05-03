@@ -106,7 +106,8 @@ void kpress()
 	}
 }
 
-void run_x()
+void 
+run_x()
 {
 	int drawing;
 

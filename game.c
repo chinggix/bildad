@@ -1,9 +1,12 @@
+#include <string.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "game.h"
+
+static int 	coll_test[MAX_OBJ];
 
 enum game 	game_type = BLANK;
 struct ball 	cue_ball;
@@ -20,12 +23,18 @@ static int		is_halt(void);
 static void 		descent(double*);
 static int 		is_vlo_vanish(struct ball);
 static int 		is_rot_vanish(struct ball);
+static int 		is_stop_sliding(struct ball);
 static enum collision	test_collision(struct ball);
 static struct ball 	wander(struct ball, double); 
 static struct ball 	rotate(struct ball, double);
 static struct ball 	slide(struct ball, double);
 static struct ball 	rail_impact(struct ball, double);
+static void		ball_impact(struct ball*, int, double);
 static struct rect 	wander_area(void);
+static struct ball 	railly_forward_slide(struct ball, double);
+static struct ball 	railly_slide_stick(struct ball, double);
+static double 		railly_sign(struct ball);
+static void 		bally_clash(struct ball*, struct ball*, double);
 
 void 
 gamefatal(const char *msg, ...)
@@ -86,35 +95,29 @@ descent(double *res)
 	double v;
 	v = *res;
 
-	if (abs(v) < EPS) {
+	if (abs(v) < EPS)
 		v = 0.0;
-	} else if (abs(v) < 500.0 * EPS) {
-		v /= 1.25;	
-	} else if (abs(v) < 1500.0 * EPS) {
-		v /= 2.0;
-	}
-	
 	*res = v;
 }
 
 struct ball
 slide(struct ball b, double dt)
 {
-	double dvr;
+	double dvr, vax, vay;
 	b.pos.x += dt * b.vlo.x;
 	b.pos.y += dt * b.vlo.y;
-	
-	dvr = hypot(b.vlo.x, b.vlo.y);
-	b.vlo.x -= dt * MI * G0 * b.vlo.x / dvr;
-	b.vlo.y -= dt * MI * G0 * b.vlo.y / dvr;
 
-	b.rot.x -= dt * (5 / 2) * MI * G0 * b.vlo.y / (dvr * radius);
-	b.rot.y += dt * (5 / 2) * MI * G0 * b.vlo.x / (dvr * radius);
+	/* Verlocities at contact point */
+	vax = b.vlo.x - radius * b.rot.y;
+	vay = b.vlo.y + radius * b.rot.x;
+
+	dvr = hypot(vax, vay);
+	b.vlo.x -= dt * MI * G0 * vax / dvr;
+	b.vlo.y -= dt * MI * G0 * vay / dvr;
+
+	b.rot.x -= dt * (5 / 2) * MI * G0 * vay / (dvr * radius);
+	b.rot.y += dt * (5 / 2) * MI * G0 * vax / (dvr * radius);
 	b.rot.z += dt * (5 / 2) * MUZ * SGN(b.rot.z) / (mass * SQU(radius));
-
-	printf("slide\n");
-	printf("%f\t%f\n", b.vlo.x, b.vlo.y);
-	printf("%f\t%f\t%f\n\n", b.rot.x, b.rot.y, b.rot.z);
 
 	return b;
 }
@@ -139,20 +142,30 @@ rotate(struct ball b, double dt)
 	b.rot.z -= dt * 5 * MUZ * G0 * b.rot.z / 
 			(mass * dvr * SQU(radius) * 7);
 
-	printf("rotate\n");
-	printf("%f\t%f\n", b.vlo.x, b.vlo.y);
-	printf("%f\t%f\n\n", b.rot.x, b.rot.y);
 	return b;
 }
 
+double
+railly_sign(struct ball b)
+{
+	struct rect quad;
+
+	quad = wander_area();
+
+	if (b.pos.x <= quad.ll.x || b.pos.x >= quad.ur.x)
+		return -1.0;
+
+	return 1.0;
+}
+
 struct ball
-railly_forward_slide(struct ball b, double dt, int is_ver)
+railly_forward_slide(struct ball b, double dt)
 {
 	double sign;
 
-	sign = is_ver ? 1.0 : -1.0;
-	
-	b.vlo.x -= dt * b.vlo.x *
+	sign = railly_sign(b);
+
+	b.vlo.x += dt * b.vlo.x *
 		   (1 - (1 + VAPR) * cos(THETA) * 
 		   (MI * cos(THETA) * sin(THETA) + cos(THETA)));
 	b.vlo.y += dt * (b.vlo.y + MI * (1 + VAPR) * cos(THETA)
@@ -165,31 +178,111 @@ railly_forward_slide(struct ball b, double dt, int is_ver)
 }
 
 struct ball
+railly_slide_stick(struct ball b, double dt)
+{
+	double sign;
+
+	sign = railly_sign(b);
+
+	b.vlo.x += dt * (
+		   b.vlo.x * 
+		   (1 - 2/7 * SQU(sin(THETA)) - 
+		    (1 + VAPR) * SQU(cos(THETA))) -
+		   2/7 * radius * b.rot.y * sin(THETA));
+	b.vlo.y += dt * (5/7 * b.vlo.y + 
+		   2/7 * radius * (b.rot.x * sin(THETA) - 
+				   b.rot.z * cos(THETA)));
+	
+	b.vlo.x *= sign;
+	b.vlo.y *= -sign;
+
+	return b;
+}
+
+struct ball
 rail_impact(struct ball b, double dt)
 {
-	struct rect quad;
-	double is_ver;
-
-	quad = wander_area();
-
 	if (b.sliding) {
-		if (b.pos.x <= quad.ll.x || b.pos.x >= quad.ur.x) is_ver = 0;
-		else is_ver = 1;
-		b = railly_forward_slide(b, dt, is_ver);
+		b = railly_forward_slide(b, dt);
 	} else {
-		b.vlo.x += dt * (
-			   b.vlo.x * 
-			   (1 - 2/7 * SQU(sin(THETA)) - 
-			    (1 + VAPR) * SQU(cos(THETA))) -
-			   2/7 * radius * b.rot.y * sin(THETA));
-		b.vlo.y += dt * (5/7 * b.vlo.y + 
-			   2/7 * radius * (b.rot.x * sin(THETA) - 
-					   b.rot.z * cos(THETA)));
+		b = railly_slide_stick(b, dt);
 	}
 
-	printf("IMPACT\n");
-	printf("%f\t%f\n", b.vlo.x, b.vlo.y);
 	return b;
+}
+
+void
+bally_clash(struct ball *ba, struct ball *bb, double dt)
+{
+	double ang, far, near;
+	struct vec2 spra, sprb, resa, resb;
+
+	far  = bb->pos.x - ba->pos.x;
+	near = bb->pos.y - ba->pos.y;
+	
+	if (ZEROF(far))
+		ang = near < EPS ? M_PI : 0.0;
+	else if (ZEROF(near))
+		ang = far < EPS ? 3 * M_PI / 2 : M_PI / 2;
+	else 
+		ang = atan(far / near);
+
+	spra = twirl_coor2(ba->vlo, -ang);
+	sprb = twirl_coor2(bb->vlo, -ang);
+	
+	resa.x = spra.x * (1 - VAPR) / 2 + sprb.x * (1 + VAPR) / 2;
+	resb.x = spra.x * (1 + VAPR) / 2 + sprb.x * (1 - VAPR) / 2;
+	resa.y = spra.y;
+	resb.y = sprb.y;
+	
+	resa = twirl_coor2(resa, ang);
+	resb = twirl_coor2(resb, ang);
+
+	ba->vlo.x = resa.x;
+	ba->vlo.y = resa.y;
+	bb->vlo.x = resb.x;
+	bb->vlo.y = resb.y;
+}
+
+void
+ball_impact(struct ball *b, int idx, double dt)
+{
+	int i;
+	double d;
+	struct ball *btest;
+
+	if (coll_test[idx])
+		return;
+
+	for (btest = &cue_ball, i = 0; i <= obj_num; ++i) {
+		d = DIST(b->pos, btest->pos);
+
+		if (!ZEROF(d) && (d < 2 * radius) && !coll_test[i]) {
+			bally_clash(b, btest, dt);
+
+			b->sliding = 1;
+			btest->sliding = 1;
+
+			*b = wander(*b, dt);
+			*btest = wander(*btest, dt);
+
+			coll_test[idx] = 1;
+			coll_test[i] = 1;
+
+			return;
+		}
+
+		if (i != obj_num)
+			btest = obj_ball + i;
+	}
+}
+
+int
+is_stop_sliding(struct ball b)
+{
+	return (abs(b.vlo.x - radius * b.rot.y) < EPS &&
+		abs(b.vlo.y + radius * b.rot.y) < EPS) ||
+		is_vlo_vanish(b);
 }
 
 struct ball
@@ -197,7 +290,7 @@ wander(struct ball b, double dt)
 {
 	struct ball res;
 
-	if (b.sliding && !is_vlo_vanish(b)) {
+	if (b.sliding && !is_stop_sliding(b)) {
 		res = slide(b, dt);
 		descent(&res.vlo.x);
 		descent(&res.vlo.y);
@@ -316,8 +409,6 @@ strike_cue_ball(double acc, double ang, double r)
 	/* Omega */
 	double omg;
 
-	printf("STRIKE\n");
-	printf("%f\t%f\t%f\n", acc, ang, r);
 	cue_ball.vlo.x = acc * stick.drc.x;
 	cue_ball.vlo.y = acc * stick.drc.y;
 
@@ -340,17 +431,18 @@ motion()
 
 	if (is_halt()) return 0;
 
-	for (btest = &cue_ball, i = 0, dt = 0.01; i <= obj_num; ++i) {
+	memset(coll_test, 0, (obj_num + 1) * sizeof(int));
+
+	for (btest = &cue_ball, i = 0, dt = 0.003; i <= obj_num; ++i) {
 		coll = test_collision(*btest);
 		if (coll == RAIL) {
-			if (1)
-				*btest = rail_impact(*btest, dt);
-			else continue;
+			*btest = rail_impact(*btest, dt);
+			*btest = wander(*btest, dt);
 		} else if (coll == BALL) {
-			continue;
+			ball_impact(btest, i, dt);
+		} else {
+			*btest = wander(*btest, dt);
 		}
-
-		*btest = wander(*btest, dt);
 
 		if (i != obj_num) btest = obj_ball + i;
 	}

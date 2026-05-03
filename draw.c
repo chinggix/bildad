@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "draw.h"
 #include "cartes.h"
@@ -26,9 +27,10 @@ static struct {
 struct vec2 hit;
 int is_motion;
 
+static void drawfatal(const char *msg, ...);
 static void initialize_gl(void);
 static void cls(void);
-static void draw_table(struct rect);
+static void draw_table(struct rect, double, double);
 static void set_color(enum color);
 static void draw_sphere(double);
 static void draw_solid_sphere(double);
@@ -37,6 +39,57 @@ static void draw_inspect(void);
 static void draw_curtain(void);
 static void draw_inspecting_ball(void);
 static void draw_inspecting_point(void);
+static void draw_rounded_rect(struct rect, double);
+
+void 
+drawfatal(const char *msg, ...)
+{
+	va_list ap;
+
+	fputs("DRAW ERROR: ", stderr);
+
+	va_start(ap, msg);
+	vfprintf(stderr, msg, ap);
+	va_end(ap);
+
+	exit(1);
+}
+
+void
+draw_rounded_rect(struct rect quad, double r)
+{
+	double cenx, ceny, alpha, rang, *rp;
+	int i, j, step;
+	struct rect zoom;
+
+	zoom = zoom_rect(quad, -r);
+	rp = sparse_rect_all_edges(zoom);
+
+	if (!rp)
+		drawfatal("Unable to sparse rectangle!\n");
+
+	cenx = quad.ll.x + quad.ur.x / 2;
+	ceny = quad.ll.y + quad.ur.y / 2;
+
+	step = 20;
+	rang = 2 * M_PI / (step * 4);
+
+	glBegin(GL_TRIANGLE_FAN);
+
+	for (i = 0; i < 4; ++i) {
+		for (j = 0; j <= step; ++j) {
+			alpha = rang * (i * step + j);
+			glVertex2f(rp[i] + r * cos(alpha), 
+				   rp[4 + i] + r * sin(alpha));
+		}
+	}
+
+	glVertex2f(cenx, ceny);
+
+	glEnd();
+
+	free(rp);
+}
 
 void
 draw_curtain()
@@ -135,9 +188,20 @@ set_color(enum color co)
 	glColor4f(res[2], res[1], res[0], 1.0f);
 }
 
-void 
-draw_table(struct rect field)
+/*
+ * Draw a table with rail and cushion width
+ */
+void
+draw_table(struct rect field, double wrail, double wcush)
 {
+	struct rect rail;
+	
+	rail = zoom_rect(field, wrail);
+	wcush = 0.0;
+
+	set_color(DARK_RED);
+	draw_rounded_rect(rail, 2.0);
+
 	set_color(DARK_BLUE);
 	glRectf(field.ll.x, field.ll.y, field.ur.x, field.ur.y);
 }
@@ -151,19 +215,28 @@ cls()
 void 
 redraw()
 {
+	double factor, rail, cushion;
+
 	if (game_type == BLANK) {
 		fprintf(stderr, "Please initialize game!\n");
 		exit(1);
 	}
+
+	factor = 7.0;
+	rail = 2.0;
+	cushion = 0.0;
 
 	/* Clear screen */
 	cls();
 	glLineWidth(2.0);
 
 	glPushMatrix();
-		glScalef(7.0f, 7.0f, 1.0f);
+		glScalef(factor, factor, 1.0f);
 
-		draw_table(field);
+		glPushMatrix();
+
+		glTranslatef(rail + cushion, rail + cushion, 0.0f);
+		draw_table(field, rail, cushion);
 
 		draw_ball(cue_ball, WHITE);
 		draw_ball(obj_ball[0], YELLOW);
@@ -171,6 +244,8 @@ redraw()
 
 		if (!is_motion) 
 			draw_cue_aim(GREY);
+
+		glPopMatrix();
 
 	glPopMatrix();
 
@@ -291,8 +366,7 @@ hitting()
 	} else {
 		ang = atan(hit.x / hit.y);
 	}
-	printf("%f\t%f\n", hypot(hit.x, hit.y), inspect.r);
 	r = radius * hypot(hit.x, hit.y) / inspect.r;
 	
-	strike_cue_ball(15.0, ang, r);
+	strike_cue_ball(100.0, ang, r);
 }

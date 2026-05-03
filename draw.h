@@ -2,12 +2,15 @@
 #define DRAW_H
 
 enum color {
-	WHITE 	= 0xffffff,
-	GREY	= 0xc7c7c7,
-	YELLOW 	= 0xddee3d,
-	RED 	= 0xff3333,
+	GREY		= 0xc7c7c7,
+	WHITE 		= 0xEEEDED,
+	YELLOW 		= 0xF0DE36,
+	RED 		= 0xD71313,
+	WOOD		= 0x81912F,
+	DARK_RED	= 0x8A244B,
+	DARK_BLUE 	= 0x0D1282,
 	LUKE_BLACK	= 0x2C3947,
-	DARK_BLUE 	= 0x1a1953
+	LIGHT_BLUE 	= 0xE8EDF2
 };
 
 void initialize_grape(void);
