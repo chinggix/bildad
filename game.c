@@ -20,8 +20,8 @@ struct 		cue stick;
 static void		gamefatal(const char *, ...);
 static void		game_null_test(void);
 static int		is_halt(void);
-static void 		descent(double*);
 static void 		descent_vlo(struct vec2*);
+static void 		descent_rot(struct vec3*);
 static int 		is_vlo_vanish(struct ball);
 static int 		is_rot_vanish(struct ball);
 static int 		is_stop_sliding(struct ball);
@@ -91,17 +91,6 @@ is_halt()
 }
 
 void
-descent(double *res)
-{
-	double v;
-	v = *res;
-
-	if (abs(v) < STOP)
-		v = 0.0;
-	*res = v;
-}
-
-void
 descent_vlo(struct vec2 *vlo)
 {
 	double mag;
@@ -114,9 +103,31 @@ descent_vlo(struct vec2 *vlo)
 	} else if (abs(mag) < 0.5) {
 		vlo->x /= 2.0;
 		vlo->y /= 2.0;
-	} else if (abs(mag) < 2.0) {
+	} else if (abs(mag) < 20.0) {
 		vlo->x -= ETA * vlo->x;
 		vlo->y -= ETA * vlo->y;
+	}
+}
+
+void
+descent_rot(struct vec3 *rot)
+{
+	double mag;
+
+	mag = hypot(rot->z, hypot(rot->x, rot->y));
+
+	if (abs(mag) < STOP) {
+		rot->x = 0.0;
+		rot->y = 0.0;
+		rot->z = 0.0;
+	} else if (abs(mag) < 0.2) {
+		rot->x /= 2.0;
+		rot->y /= 2.0;
+		rot->z /= 2.0;
+	} else if (abs(mag) < 1.0) {
+		rot->x -= ETA * rot->x;
+		rot->y -= ETA * rot->y;
+		rot->z -= ETA * rot->z;
 	}
 }
 
@@ -146,6 +157,7 @@ struct ball
 rotate(struct ball b, double dt)
 {
 	double dvr;
+	/* double vx, vy; */
 	
 	dvr = hypot(b.rot.x, b.rot.y);
 
@@ -155,6 +167,14 @@ rotate(struct ball b, double dt)
 	b.vlo.x -= dt * 5 * MUY * b.rot.y / (mass * radius * dvr * 7);
 	b.vlo.y += dt * 5 * MUX * b.rot.x / (mass * radius * dvr * 7);
 
+	/*
+	vx = 5 * MUY * b.rot.y / (mass * radius * dvr * 7);
+        vy = 5 * MUX * b.rot.x / (mass * radius * dvr * 7);
+
+	b.pos.x += dt * vx;
+	b.pos.y += dt * vy;
+	*/
+
 	b.rot.x -= dt * 5 * MUX * G0 * b.rot.x / 
 	             	(mass * dvr * SQU(radius) * 7);
 	b.rot.y -= dt * 5 * MUY * G0 * b.rot.y / 
@@ -162,6 +182,7 @@ rotate(struct ball b, double dt)
 	b.rot.z -= dt * 5 * MUZ * G0 * b.rot.z / 
 			(mass * dvr * SQU(radius) * 7);
 
+	printf("ROTATE\n");
 	return b;
 }
 
@@ -311,22 +332,21 @@ wander(struct ball b, double dt)
 {
 	struct ball res;
 
+	res = b;
+
 	if (b.sliding && !is_stop_sliding(b)) {
-		res = slide(b, dt);
+		res = slide(res, dt);
 		descent_vlo(&res.vlo);
 		return res;
 	}
 
-	b.sliding = 0;
+	res.sliding = 0;
 
 	if (!is_rot_vanish(b)) {
-		res = rotate(b, dt);
-		descent_vlo(&res.vlo);
-		descent(&res.rot.x);
-		descent(&res.rot.y);
-		descent(&res.rot.z);
+		res = rotate(res, dt);
+		/* descent_vlo(&res.vlo); */
+		descent_rot(&res.rot);
 	} else {
-		res = b;
 		halt_motion(&res);
 	}
 
@@ -337,10 +357,15 @@ enum collision
 test_collision(struct ball b)
 {
 	int i;
-	double d;
+	double d, v;
 	struct ball btest;
+	struct rect area;
 
-	if (!is_inside_rect(b.pos, wander_area()))
+	area = wander_area();
+	v = hypot(b.vlo.x, b.vlo.y);
+	area = zoom_rect(area, -v * STOP);
+
+	if (!is_inside_rect(b.pos, area))
 		return RAIL;
 
 	for (btest = cue_ball, i = 0; i <= obj_num; ++i) {
