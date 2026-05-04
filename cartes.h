@@ -4,7 +4,7 @@
 #ifndef M_PI
 #define M_PI 	3.1415926
 #endif
-#define EPS 	0.0000001
+#define EPS 	0.0001
 
 #define MIN(a, b) 	((a) < (b) ? (a) : (b))
 #define ZEROF(a) 	((a) > -EPS && (a) < EPS)

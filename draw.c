@@ -24,6 +24,8 @@ static struct {
 	int drawing;
 } inspect;
 
+static double shadow = 0.3;
+
 struct vec2 hit;
 int is_motion;
 
@@ -40,6 +42,7 @@ static void draw_curtain(void);
 static void draw_inspecting_ball(void);
 static void draw_inspecting_point(void);
 static void draw_rounded_rect(struct rect, double);
+static void cushion_shadow(struct rect);
 
 void 
 drawfatal(const char *msg, ...)
@@ -168,10 +171,14 @@ draw_solid_sphere(double r)
 void 
 draw_ball(struct ball orb, enum color co)
 {
-	set_color(co);
 	glPushMatrix();
 		glTranslatef(orb.pos.x, orb.pos.y, 0.0f);
+		set_color(SHADOW);
+		draw_solid_sphere(radius + shadow);
+		set_color(co);
 		draw_solid_sphere(radius);
+		set_color(ROSEWATER);
+		draw_solid_sphere(radius/4.0);
 	glPopMatrix();
 }
 
@@ -188,22 +195,61 @@ set_color(enum color co)
 	glColor4f(res[2], res[1], res[0], 1.0f);
 }
 
+void
+cushion_shadow(struct rect field)
+{
+	struct rect shade;
+	double *rp;
+
+	shade = zoom_rect(field, -shadow);
+
+	rp = sparse_rect_all_edges(shade);
+	if (!rp) 
+		drawfatal("Unable to sparse rectangle!\n");
+
+	set_color(SHADOW);
+	glBegin(GL_POLYGON);
+
+	glVertex2f(rp[0], rp[4]);
+	glVertex2f(rp[1], rp[5]);
+	glVertex2f(rp[1] + shadow, rp[5] - shadow);
+	glVertex2f(rp[0] + shadow, rp[4] - shadow);
+
+	glEnd();
+
+	glBegin(GL_POLYGON);
+
+	glVertex2f(rp[2], rp[6]);
+	glVertex2f(rp[3], rp[7]);
+	glVertex2f(rp[3] - shadow, rp[7] + shadow);
+	glVertex2f(rp[2] - shadow, rp[6] + shadow);
+
+	glEnd();
+
+	free(rp);
+}
+
 /*
  * Draw a table with rail and cushion width
  */
 void
 draw_table(struct rect field, double wrail, double wcush)
 {
-	struct rect rail;
+	struct rect rail, cushion;
 	
-	rail = zoom_rect(field, wrail);
-	wcush = 0.0;
+	rail = zoom_rect(field, wrail + wcush);
+	cushion = zoom_rect(field, wcush);
 
 	set_color(DARK_RED);
-	draw_rounded_rect(rail, 2.0);
+	draw_rounded_rect(rail, 1.5);
 
-	set_color(DARK_BLUE);
+	set_color(TEAL);
+	glRectf(cushion.ll.x, cushion.ll.y, cushion.ur.x, cushion.ur.y);
+
+	set_color(TEAL);
 	glRectf(field.ll.x, field.ll.y, field.ur.x, field.ur.y);
+
+	cushion_shadow(field);
 }
 
 void 
@@ -217,14 +263,12 @@ redraw()
 {
 	double factor, rail, cushion;
 
-	if (game_type == BLANK) {
-		fprintf(stderr, "Please initialize game!\n");
-		exit(1);
-	}
+	if (game_type == BLANK)
+		drawfatal("Please initialize game!\n");
 
-	factor = 7.0;
-	rail = 2.0;
-	cushion = 0.0;
+	factor = 7.1;
+	rail = 1.9;
+	cushion = 0.45;
 
 	/* Clear screen */
 	cls();
@@ -368,5 +412,33 @@ hitting()
 	}
 	r = radius * hypot(hit.x, hit.y) / inspect.r;
 	
-	strike_cue_ball(100.0, ang, r);
+	strike_cue_ball(40.0, ang, r);
+}
+
+void
+roll_cue_clockly()
+{
+	if (!inspect.drawing)
+		adjust_cue(-10 * M_PI / 500);
+}
+
+void
+roll_cue_counterclockly()
+{
+	if(!inspect.drawing)
+		adjust_cue(10 * M_PI / 500);
+}
+
+void
+adjust_cue_clockly()
+{
+	if (!inspect.drawing)
+		adjust_cue(-10 * M_PI / 4000);
+}
+
+void
+adjust_cue_counterclockly()
+{
+	if (!inspect.drawing)
+		adjust_cue(10 * M_PI / 4000);
 }

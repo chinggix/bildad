@@ -7,6 +7,9 @@ enum color {
 	YELLOW 		= 0xF0DE36,
 	RED 		= 0xD71313,
 	WOOD		= 0x81912F,
+	SHADOW		= 0x853953,
+	TEAL		= 0x179299,
+	ROSEWATER	= 0xdc8a78,
 	DARK_RED	= 0x8A244B,
 	DARK_BLUE 	= 0x0D1282,
 	LUKE_BLACK	= 0x2C3947,
@@ -18,6 +21,10 @@ void reshape_viewport(unsigned int, unsigned int);
 void inspecting(void);
 void adjust_inspect(double x, double y);
 void hitting(void);
+void roll_cue_clockly(void);
+void roll_cue_counterclockly(void);
+void adjust_cue_clockly(void);
+void adjust_cue_counterclockly(void);
 
 void redraw(void);
 

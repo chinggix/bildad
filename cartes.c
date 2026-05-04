@@ -178,16 +178,9 @@ struct vec2
 twirl_coor2(struct vec2 pnt, double ang)
 {
 	struct vec2 res;
-	double xa, xb, ya, yb;
-
-	xa = pnt.x * cos(ang);
-	xb = pnt.x * sin(ang);
 	
-	ya = pnt.y * sin(ang);
-	yb = pnt.y * cos(ang);
-	
-	res.x = xa - ya;
-	res.y = xb + yb;
+	res.x = pnt.x * cos(ang) - pnt.y * sin(ang);
+	res.y = pnt.x * sin(ang) + pnt.y * cos(ang);
 
 	return res;
 }

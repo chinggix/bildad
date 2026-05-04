@@ -21,6 +21,7 @@ static void		gamefatal(const char *, ...);
 static void		game_null_test(void);
 static int		is_halt(void);
 static void 		descent(double*);
+static void 		descent_vlo(struct vec2*);
 static int 		is_vlo_vanish(struct ball);
 static int 		is_rot_vanish(struct ball);
 static int 		is_stop_sliding(struct ball);
@@ -60,13 +61,13 @@ game_null_test()
 int
 is_vlo_vanish(struct ball b)
 {
-	return ZEROF(b.vlo.x) && ZEROF(b.vlo.y);
+	return ISSTOP(b.vlo.x) && ISSTOP(b.vlo.y);
 }
 
 int
 is_rot_vanish(struct ball b)
 {
-	return ZEROF(b.rot.x) && ZEROF(b.rot.y);
+	return ISSTOP(b.rot.x) && ISSTOP(b.rot.y);
 }
 
 int 
@@ -95,9 +96,28 @@ descent(double *res)
 	double v;
 	v = *res;
 
-	if (abs(v) < EPS)
+	if (abs(v) < STOP)
 		v = 0.0;
 	*res = v;
+}
+
+void
+descent_vlo(struct vec2 *vlo)
+{
+	double mag;
+
+	mag = hypot(vlo->x, vlo->y);
+
+	if (abs(mag) < STOP) {
+		vlo->x = 0.0;
+		vlo->y = 0.0;
+	} else if (abs(mag) < 0.5) {
+		vlo->x /= 2.0;
+		vlo->y /= 2.0;
+	} else if (abs(mag) < 2.0) {
+		vlo->x -= ETA * vlo->x;
+		vlo->y -= ETA * vlo->y;
+	}
 }
 
 struct ball
@@ -165,10 +185,10 @@ railly_forward_slide(struct ball b, double dt)
 
 	sign = railly_sign(b);
 
-	b.vlo.x += dt * b.vlo.x *
+	b.vlo.x -= dt * b.vlo.x *
 		   (1 - (1 + VAPR) * cos(THETA) * 
 		   (MI * cos(THETA) * sin(THETA) + cos(THETA)));
-	b.vlo.y += dt * (b.vlo.y + MI * (1 + VAPR) * cos(THETA)
+	b.vlo.y -= dt * (b.vlo.y + MI * (1 + VAPR) * cos(THETA)
 				      * sin(THETA) * b.vlo.x);
 	
 	b.vlo.x *= sign;
@@ -217,8 +237,8 @@ bally_clash(struct ball *ba, struct ball *bb, double dt)
 	double ang, far, near;
 	struct vec2 spra, sprb, resa, resb;
 
-	far  = bb->pos.x - ba->pos.x;
-	near = bb->pos.y - ba->pos.y;
+	far  = bb->pos.y - ba->pos.y;
+	near = bb->pos.x - ba->pos.x;
 	
 	if (ZEROF(far))
 		ang = near < EPS ? M_PI : 0.0;
@@ -227,6 +247,7 @@ bally_clash(struct ball *ba, struct ball *bb, double dt)
 	else 
 		ang = atan(far / near);
 
+	printf("IMPACT ANGLE:\t%f\n", ang * (180.0 / M_PI));
 	spra = twirl_coor2(ba->vlo, -ang);
 	sprb = twirl_coor2(bb->vlo, -ang);
 	
@@ -238,17 +259,15 @@ bally_clash(struct ball *ba, struct ball *bb, double dt)
 	resa = twirl_coor2(resa, ang);
 	resb = twirl_coor2(resb, ang);
 
-	ba->vlo.x = resa.x;
-	ba->vlo.y = resa.y;
-	bb->vlo.x = resb.x;
-	bb->vlo.y = resb.y;
+	ba->vlo = resa;
+	bb->vlo = resb;
 }
 
 void
 ball_impact(struct ball *b, int idx, double dt)
 {
 	int i;
-	double d;
+	double d, v;
 	struct ball *btest;
 
 	if (coll_test[idx])
@@ -256,8 +275,10 @@ ball_impact(struct ball *b, int idx, double dt)
 
 	for (btest = &cue_ball, i = 0; i <= obj_num; ++i) {
 		d = DIST(b->pos, btest->pos);
+		v = (hypot(b->vlo.x, b->vlo.y) + 
+		     hypot(btest->vlo.x, btest->vlo.y)) / 2;
 
-		if (!ZEROF(d) && (d < 2 * radius) && !coll_test[i]) {
+		if (!ZEROF(d) && (d <= 2 * radius + v) && !coll_test[i]) {
 			bally_clash(b, btest, dt);
 
 			b->sliding = 1;
@@ -280,8 +301,8 @@ ball_impact(struct ball *b, int idx, double dt)
 int
 is_stop_sliding(struct ball b)
 {
-	return (abs(b.vlo.x - radius * b.rot.y) < EPS &&
-		abs(b.vlo.y + radius * b.rot.y) < EPS) ||
+	return (abs(b.vlo.x - radius * b.rot.y) < STOP &&
+		abs(b.vlo.y + radius * b.rot.x) < STOP) ||
 		is_vlo_vanish(b);
 }
 
@@ -292,8 +313,7 @@ wander(struct ball b, double dt)
 
 	if (b.sliding && !is_stop_sliding(b)) {
 		res = slide(b, dt);
-		descent(&res.vlo.x);
-		descent(&res.vlo.y);
+		descent_vlo(&res.vlo);
 		return res;
 	}
 
@@ -301,8 +321,7 @@ wander(struct ball b, double dt)
 
 	if (!is_rot_vanish(b)) {
 		res = rotate(b, dt);
-		descent(&res.vlo.x);
-		descent(&res.vlo.y);
+		descent_vlo(&res.vlo);
 		descent(&res.rot.x);
 		descent(&res.rot.y);
 		descent(&res.rot.z);
@@ -433,7 +452,7 @@ motion()
 
 	memset(coll_test, 0, (obj_num + 1) * sizeof(int));
 
-	for (btest = &cue_ball, i = 0, dt = 0.003; i <= obj_num; ++i) {
+	for (btest = &cue_ball, i = 0, dt = 0.01; i <= obj_num; ++i) {
 		coll = test_collision(*btest);
 		if (coll == RAIL) {
 			*btest = rail_impact(*btest, dt);
