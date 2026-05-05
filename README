@@ -1,0 +1,25 @@
+------------------------------------
+BILDAD: A Very Simple Billiards Game
+------------------------------------
+
+Disclaimer: This program is by no means complete, not even Beta. Run it with
+your own risk.
+
+Requirements
+------------
+
+ansi C compiler
+make
+X server
+xlib
+opengl
+glx
+
+How to play
+-----------
+
+adjust cue direction:   w, x, a, d
+change hitting point:   i
+hit:                    Enter
+
+-* This game have no rules, will update soon :-)

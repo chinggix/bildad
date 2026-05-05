@@ -115,6 +115,7 @@ descent_rot(struct vec3 *rot)
 	double mag;
 
 	mag = hypot(rot->z, hypot(rot->x, rot->y));
+	printf("MAG: %f\n", mag);
 
 	if (abs(mag) < STOP) {
 		rot->x = 0.0;
@@ -124,10 +125,14 @@ descent_rot(struct vec3 *rot)
 		rot->x /= 2.0;
 		rot->y /= 2.0;
 		rot->z /= 2.0;
-	} else if (abs(mag) < 1.0) {
-		rot->x -= ETA * rot->x;
-		rot->y -= ETA * rot->y;
-		rot->z -= ETA * rot->z;
+	} else if (abs(mag) < 5.0) {
+		rot->x -= ETA * rot->x / 10;
+		rot->y -= ETA * rot->y / 10;
+		rot->z -= ETA * rot->z / 10;
+	} else if (abs(mag) < 20.0) {
+		rot->x -= ETA * rot->x / 30;
+		rot->y -= ETA * rot->y / 30;
+		rot->z -= ETA * rot->z / 30;
 	}
 }
 
@@ -157,23 +162,23 @@ struct ball
 rotate(struct ball b, double dt)
 {
 	double dvr;
-	/* double vx, vy; */
+	double vx, vy;
 	
 	dvr = hypot(b.rot.x, b.rot.y);
 
+	/*
 	b.pos.x += dt * b.vlo.x;
 	b.pos.y += dt * b.vlo.y;
 
 	b.vlo.x -= dt * 5 * MUY * b.rot.y / (mass * radius * dvr * 7);
 	b.vlo.y += dt * 5 * MUX * b.rot.x / (mass * radius * dvr * 7);
+	*/
 
-	/*
 	vx = 5 * MUY * b.rot.y / (mass * radius * dvr * 7);
         vy = 5 * MUX * b.rot.x / (mass * radius * dvr * 7);
 
 	b.pos.x += dt * vx;
 	b.pos.y += dt * vy;
-	*/
 
 	b.rot.x -= dt * 5 * MUX * G0 * b.rot.x / 
 	             	(mass * dvr * SQU(radius) * 7);
@@ -183,6 +188,7 @@ rotate(struct ball b, double dt)
 			(mass * dvr * SQU(radius) * 7);
 
 	printf("ROTATE\n");
+	printf("%f\t%f\t%f\n", b.rot.x, b.rot.y, b.rot.z);
 	return b;
 }
 
@@ -299,7 +305,7 @@ ball_impact(struct ball *b, int idx, double dt)
 		v = (hypot(b->vlo.x, b->vlo.y) + 
 		     hypot(btest->vlo.x, btest->vlo.y)) / 2;
 
-		if (!ZEROF(d) && (d <= 2 * radius + v) && !coll_test[i]) {
+		if (!ZEROF(d) && (d <= 2*radius + v + STOP) && !coll_test[i]) {
 			bally_clash(b, btest, dt);
 
 			b->sliding = 1;
